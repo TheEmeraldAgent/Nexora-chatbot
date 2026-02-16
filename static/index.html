@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Nexora Customer Help Bot</title>
+  <style>
+    :root{
+      --bg: #0b1220;
+      --panel: rgba(255,255,255,0.06);
+      --panel-2: rgba(255,255,255,0.08);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.65);
+      --border: rgba(255,255,255,0.10);
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --radius: 18px;
+      --accent: #7c5cff;
+      --accent-2: #33d6a6;
+      --warn: #ffb020;
+      --bad: #ff5c7a;
+    }
+
+    *{ box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:
+        radial-gradient(1100px 600px at 20% 10%, rgba(124,92,255,0.25), transparent 60%),
+        radial-gradient(900px 500px at 80% 20%, rgba(51,214,166,0.16), transparent 60%),
+        radial-gradient(800px 500px at 60% 90%, rgba(255,176,32,0.10), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 28px 18px;
+    }
+
+    .wrap{
+      width: 100%;
+      max-width: 980px;
+    }
+
+    .header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap: 6px;
+    }
+
+    .title{
+      font-size: 28px;
+      line-height: 1.1;
+      margin:0;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle{
+      margin:0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      max-width: 680px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+      user-select:none;
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.05));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .searchbar{
+      display:flex;
+      gap: 10px;
+      padding: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .input{
+      flex:1;
+      background: rgba(0,0,0,0.18);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px 14px;
+      outline: none;
+      font-size: 14px;
+    }
+    .input::placeholder{ color: rgba(255,255,255,0.45); }
+
+    .btn{
+      background: linear-gradient(180deg, rgba(124,92,255,0.95), rgba(124,92,255,0.75));
+      color: white;
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 600;
+      cursor: pointer;
+      min-width: 110px;
+      box-shadow: 0 12px 24px rgba(124,92,255,0.18);
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn:disabled{
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .hint{
+      padding: 10px 14px 0 14px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .content{
+      padding: 14px;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+
+    .bubble{
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .bubble-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .bubble-title{
+      margin:0;
+      font-size: 16px;
+      letter-spacing: -0.01em;
+    }
+
+    .chips{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content:flex-end;
+    }
+
+    .chip{
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.82);
+    }
+    .chip.faq{ border-color: rgba(124,92,255,0.35); background: rgba(124,92,255,0.12); }
+    .chip.troubleshooting{ border-color: rgba(51,214,166,0.35); background: rgba(51,214,166,0.10); }
+    .chip.known_issue{ border-color: rgba(255,176,32,0.35); background: rgba(255,176,32,0.10); }
+
+    .chip.sev-low{ border-color: rgba(51,214,166,0.40); }
+    .chip.sev-medium{ border-color: rgba(255,176,32,0.45); }
+    .chip.sev-high{ border-color: rgba(255,92,122,0.45); background: rgba(255,92,122,0.12); }
+
+    .bubble-body{
+      margin:0;
+      color: rgba(255,255,255,0.82);
+      line-height: 1.55;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+
+    .meta{
+      margin-top: 10px;
+      color: rgba(255,255,255,0.55);
+      font-size: 12px;
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .empty{
+      padding: 18px;
+      border: 1px dashed rgba(255,255,255,0.18);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.03);
+      color: rgba(255,255,255,0.70);
+    }
+
+    .footer{
+      margin-top: 12px;
+      color: rgba(255,255,255,0.55);
+      font-size: 12px;
+      text-align:center;
+    }
+
+    @media (max-width: 640px){
+      .header{ flex-direction:column; align-items:flex-start; }
+      .btn{ min-width: 90px; }
+      .bubble-top{ flex-direction:column; align-items:flex-start; }
+      .chips{ justify-content:flex-start; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="brand">
+        <h1 class="title">Nexora Customer Help Bot</h1>
+        <p class="subtitle">
+          Ask a question and get answers from the validated knowledge base (FAQs, Troubleshooting Guides, Known Issues).
+          Only <b>public</b> and <b>validated</b> content is shown.
+        </p>
+      </div>
+      <div class="pill">SQL-based retrieval • SQLite FTS5</div>
+    </div>
+
+    <div class="card">
+      <div class="searchbar">
+        <input id="q" class="input" placeholder="Try: login timeout, csv export, employees, knowledge enablement" />
+        <button id="ask" class="btn">Search</button>
+      </div>
+
+      <div class="hint" id="hint"></div>
+      <div class="content" id="out"></div>
+    </div>
+
+    <div class="footer">Tip: If no match appears, add keywords (product name, error message) or try shorter terms.</div>
+  </div>
+
+  <script>
+    const qEl = document.getElementById("q");
+    const out = document.getElementById("out");
+    const btn = document.getElementById("ask");
+    const hint = document.getElementById("hint");
+
+    function esc(s) {
+      return (s || "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;");
+    }
+
+    function chipForType(t){
+      if(!t) return "";
+      const cls = t;
+      const label = t === "known_issue" ? "known issue" : t;
+      return `<span class="chip ${cls}">${esc(label)}</span>`;
+    }
+
+    function chipForSeverity(sev){
+      if(!sev) return "";
+      const s = sev.toLowerCase();
+      const cls = s === "high" ? "sev-high" : (s === "medium" ? "sev-medium" : "sev-low");
+      return `<span class="chip ${cls}">severity: ${esc(s)}</span>`;
+    }
+
+    async function ask(){
+      const q = qEl.value.trim();
+      if(q.length < 2){
+        hint.textContent = "Type at least 2 characters.";
+        out.innerHTML = "";
+        return;
+      }
+
+      btn.disabled = true;
+      hint.textContent = "Searching…";
+      out.innerHTML = "";
+
+      try{
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=5`);
+        const data = await res.json();
+
+        const results = data.results || [];
+        if(results.length === 0){
+          hint.textContent = "";
+          out.innerHTML = `
+            <div class="empty">
+              <b>No validated answer found.</b>
+              <div style="margin-top:8px;">
+                Try adding keywords (product name, error text). If needed, contact support and share the time of the issue and any error message.
+              </div>
+            </div>`;
+          return;
+        }
+
+        hint.textContent = `Top matches for “${q}”`;
+        out.innerHTML = results.map(r => `
+          <div class="bubble">
+            <div class="bubble-top">
+              <h3 class="bubble-title">${esc(r.title)}</h3>
+              <div class="chips">
+                ${chipForType(r.content_type)}
+                ${r.product ? `<span class="chip">${esc(r.product)}</span>` : ""}
+                ${chipForSeverity(r.severity)}
+              </div>
+            </div>
+            <p class="bubble-body">${esc(r.body)}</p>
+            <div class="meta">
+              ${r.updated_at ? `<span>Updated: ${esc(r.updated_at)}</span>` : ""}
+            </div>
+          </div>
+        `).join("");
+
+      } catch(e){
+        hint.textContent = "";
+        out.innerHTML = `<div class="empty"><b>Error:</b> Could not fetch results. Please check the server and database connection.</div>`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    btn.addEventListener("click", ask);
+    qEl.addEventListener("keydown", (e) => { if(e.key === "Enter") ask(); });
+
+    // Optional: run an initial example
+    qEl.value = "login timeout";
+  </script>
+</body>
+</html>
