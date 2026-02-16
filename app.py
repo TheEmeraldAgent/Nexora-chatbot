@@ -6,25 +6,31 @@ from pathlib import Path
 
 BASE = Path(__file__).resolve().parent
 DB_PATH = BASE / "kb_chatbot_clean.db"
+STATIC_DIR = BASE / "static"
 
 app = FastAPI(title="Nexora Customer SQL Chatbot")
 
-app.mount("/static", StaticFiles(directory=str(BASE / "static")), name="static")
+# Serve the static site (index.html, css, images if any)
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
 
 
 def get_conn():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     return conn
 
 
 @app.get("/")
 def home():
-    return FileResponse(str(BASE / "static" / "index.html"))
+    # Serve the frontend at root
+    return FileResponse(str(STATIC_DIR / "index.html"))
 
 
 @app.get("/api/search")
-def search(q: str = Query(..., min_length=2, max_length=200), limit: int = 5):
+def search(
+    q: str = Query(..., min_length=2, max_length=200),
+    limit: int = Query(5, ge=1, le=20),
+):
     """
     Customer-facing search:
     - validated only
@@ -32,7 +38,7 @@ def search(q: str = Query(..., min_length=2, max_length=200), limit: int = 5):
     - content types: faq, troubleshooting, known_issue
     - ranked by FTS bm25
     """
-    q_clean = q.replace('"', "").strip()
+    q_clean = (q or "").replace('"', "").strip()
 
     sql_fts = """
     SELECT
@@ -65,26 +71,29 @@ def search(q: str = Query(..., min_length=2, max_length=200), limit: int = 5):
     cur = conn.cursor()
 
     try:
-        cur.execute(sql_fts, (q_clean, limit))
+        cur.execute(sql_fts, (q_clean, int(limit)))
         rows = [dict(r) for r in cur.fetchall()]
     except sqlite3.OperationalError:
-        # Fallback if MATCH fails due to special characters
+        # Fallback if MATCH fails due to special characters or query syntax
         sql_like = """
         SELECT item_id, title, body, content_type, product, severity, updated_at, 999999 AS score
         FROM kb_item
         WHERE status='validated'
           AND access_level='public'
           AND content_type IN ('known_issue','troubleshooting','faq')
-          AND (LOWER(title) LIKE '%' || LOWER(?) || '%' OR LOWER(body) LIKE '%' || LOWER(?) || '%')
+          AND (
+            LOWER(title) LIKE '%' || LOWER(?) || '%'
+            OR LOWER(body) LIKE '%' || LOWER(?) || '%'
+          )
         ORDER BY updated_at DESC
         LIMIT ?;
         """
-        cur.execute(sql_like, (q_clean, q_clean, limit))
+        cur.execute(sql_like, (q_clean, q_clean, int(limit)))
         rows = [dict(r) for r in cur.fetchall()]
+    finally:
+        conn.close()
 
-    conn.close()
-
-    # Add short snippet for UI
+    # Optional snippet (safe for future UI use)
     for r in rows:
         body = r.get("body") or ""
         r["snippet"] = body[:280] + ("…" if len(body) > 280 else "")
